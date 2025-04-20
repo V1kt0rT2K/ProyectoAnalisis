@@ -1,0 +1,181 @@
+@startuml ConstancyDatabaseSchema
+
+' Enable database notation
+skinparam linetype ortho
+skinparam packageStyle rectangle
+hide circle
+hide empty members
+
+' Entidades
+entity "constancy.tblConstancyWatermarks" {
+  + idConstancyWatermark (PK) : int
+  --
+  fileBucket : nvarchar(max)
+  fileKey : nvarchar(max)
+  generationDate : datetime
+  isActive : bit
+}
+
+entity "constancy.tblConstancyTemplateTypes" {
+  + idConstancyTemplateType (PK) : int
+  --
+  templateTypeName : nvarchar(200)
+}
+
+entity "constancy.tblConstancyTemplates" {
+  + idConstancyTemplate (PK) : int
+  --
+  - idConstancyTemplateType (FK) : int
+  template : nvarchar(max)
+  isActive : bit
+}
+
+entity "constancy.tblConstancies" {
+  + idConstancy (PK) : int
+  --
+  - idUserStudentAcademicProgram (FK) : int
+  - idUserGenerator (FK) : int
+  - idAuthoritySignature (FK) : int
+  - idConstancyWatermark (FK): int 
+  constancyCode : nvarchar(100)
+  constancyDate : datetime
+  accountNumber : nvarchar(max)
+  studentName : nvarchar(max)
+  academicProgramName : nvarchar(max)
+  regionalCenterName : nvarchar(max)
+  authorityName : nvarchar(max)
+  generatorName : nvarchar(max)
+  constancyTelephoneNumber : nvarchar(max)
+  constancyTitle : nvarchar(max)
+  constancyHeader : nvarchar(max)
+  constancyFooter : nvarchar(max)
+}
+
+entity "constancy.tblConstancyActivities" {
+  + idConstancyActivity (PK) : int
+  --
+  - idConstancy (FK) : int
+  - idActivity (FK) : int
+  activityName : nvarchar(max)
+  activityCode : nvarchar(100)
+  startDate : datetime
+  endDate : datetime
+}
+
+entity "constancy.tblConstancyActivityHours" {
+  + idConstancyActivityHour (PK) : int
+  --
+  - idConstancyActivity (FK) : int
+  actionAmbitName : nvarchar(max)
+  assignedHours : int
+}
+
+' External references (assuming these exist in other schemas)
+entity "users.tblStudentAcademicPrograms" {
+  + idUserStudentAcademicProgram (PK) : int
+  --
+  - idUserStudent (FK) : int
+  - idRegCenterAcadProgram (FK) : int
+  isActive : bit
+  hoursCompleted: bit
+}
+
+entity "users.tblUsers" {
+  + idUser (PK) : int
+  --
+  - idPerson (FK) : int
+  password : nvarchar(max)
+  isEnabled: bit
+}
+
+entity "users.tblPersons" {
+  + idPerson (PK) : int
+  --
+  - idRegionalCenter (FK) : int
+  identityNumber : nvarchar(100)
+  firstName : nvarchar(max)
+  secondName : nvarchar(max)
+  lastName : nvarchar(max)
+  secondLastName : nvarchar(max)
+  gender : nvarchar(max)
+}
+
+entity "users.tblStudents" {
+  + idStudent (PK) : int
+  --
+  - idPerson (FK) : int
+  accountNumber : nvarchar(20)
+  email : nvarchar(700)
+}
+
+entity "organizer.tblAcademicPrograms" {
+  + idAcademicProgram (PK) : int
+  --
+  - idAcadProgType (FK) : int
+  - idFaculty (FK) : int
+  programName : nvarchar(200)
+}
+
+entity "organizer.tblRegionalCenterAcademicPrograms" {
+  + idRegCenterAcadProgram (PK) : int
+  --
+  - idRegCenter (FK) : int
+  - idAcademicProgram (FK) : int
+}
+
+entity "organizer.tblRegionalCenters" {
+  + idRegCenter (PK) : int
+  --
+  regCenterName : nvarchar(max)
+}
+
+
+entity "users.tblAuthoritySignatures" {
+  + idAuthoritySignature (PK) : int
+  --
+  - idUser (FK) : int
+  fileBucket : nvarchar(max)
+  fileKey : nvarchar(max)
+  generationDate : datetime
+  isActive : bit
+}
+
+entity "activity.tblActivities" {
+  + idActivity (PK) : int
+  --
+  - idStatus (FK) : int
+  - idRegionalCenter (FK) : int
+  - idFormerActivity (FK) : int
+  activityName : nvarchar(max)
+  activityCode : nvarchar(100)
+  activityDescription : nvarchar(max)
+  activityOther : nvarchar (max)
+  location : nvarchar(max)
+  startDate : datetime
+  endDate : datetime
+  startTime : time
+  endTime: time
+  generationDate : datetime
+  modificationDate : datetime
+}
+
+' Relationships
+constancy.tblConstancyTemplates }|--|| constancy.tblConstancyTemplateTypes 
+constancy.tblConstancies }|--|| users.tblStudentAcademicPrograms 
+constancy.tblConstancies }|--|| users.tblUsers 
+constancy.tblConstancies }|--|| users.tblAuthoritySignatures 
+constancy.tblConstancies }|--|| constancy.tblConstancyWatermarks 
+constancy.tblConstancyActivities ||--|| constancy.tblConstancies 
+constancy.tblConstancyActivities }|--|| activity.tblActivities 
+constancy.tblConstancyActivityHours }|--|| constancy.tblConstancyActivities 
+organizer.tblRegionalCenterAcademicPrograms }|--|| organizer.tblRegionalCenters
+organizer.tblRegionalCenterAcademicPrograms }|--|| organizer.tblAcademicPrograms
+activity.tblActivities }|--|| organizer.tblRegionalCenters
+users.tblUsers ||--|| users.tblPersons
+users.tblAuthoritySignatures ||--|| users.tblUsers
+users.tblStudents ||--|| users.tblPersons
+users.tblPersons }|--|| organizer.tblRegionalCenters
+users.tblStudentAcademicPrograms }|--|| users.tblUsers
+users.tblStudentAcademicPrograms }|--|| organizer.tblRegionalCenterAcademicPrograms
+
+@enduml

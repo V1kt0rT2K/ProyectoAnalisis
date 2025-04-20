@@ -1,0 +1,26 @@
+@startuml  
+
+title Diagrama de Estados del QR  
+
+   
+
+[*] --> Generado: Estudiante crea QR  
+
+Generado --> Pendiente: QR mostrado  
+
+Pendiente --> Escaneado: Organizador escanea  
+
+Escaneado --> Validado: Servidor aprueba  
+
+Validado --> [*]  
+
+Pendiente --> Expirado: Pasadas 24h  
+
+Expirado --> [*]  
+
+Escaneado --> Rechazado: Validación falla  
+
+Rechazado --> [*]  
+
+
+@enduml
