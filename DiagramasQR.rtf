@@ -1,0 +1,131 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2761
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;\red246\green249\blue255;\red31\green31\blue34;}
+{\*\expandedcolortbl;;\cssrgb\c97255\c98039\c100000;\cssrgb\c16078\c16471\c17647;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs24 \cf2 \cb3 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Diagrama de Casos de Uso Principal\
+@startuml\
+left to right direction\
+skinparam actorStyle awesome\
+\
+actor Estudiante as Est\
+actor Organizador as Org\
+actor "Sistema de\\nAutenticaci\'f3n" as Auth\
+actor "Servidor de\\nAsistencia" as Server\
+\
+rectangle Plataforma \{\
+  usecase "Visualizar QR de Actividad" as UC1\
+  usecase "Registro de Asistencia" as UC2\
+  \
+  Est --> UC1\
+  Org --> UC2\
+  UC1 --> Auth\
+  UC1 --> Server\
+  UC2 --> Auth\
+  UC2 --> Server\
+\}\
+\
+note right of Est: Genera y presenta QR\\npara actividades inscritas\
+note left of Org: Escanea QR y valida\\nasistencia de estudiantes\
+@enduml\
+\
+\
+Diagrama de Secuencia - Generaci\'f3n de QR\
+@startuml\
+actor Estudiante as Est\
+participant "Interfaz Web" as UI\
+participant "Controlador" as Ctrl\
+participant "Servicio QR" as QRService\
+participant "Base de Datos" as DB\
+\
+Est -> UI: Accede a "Mis actividades"\
+UI -> Ctrl: Solicita actividades inscritas\
+Ctrl -> DB: Consulta inscripciones\
+DB --> Ctrl: Lista de actividades\
+Ctrl --> UI: Muestra actividades\
+Est -> UI: Selecciona actividad\
+UI -> Ctrl: Solicita generaci\'f3n QR\
+Ctrl -> QRService: Genera c\'f3digo \'fanico\
+QRService -> DB: Registra c\'f3digo QR\
+DB --> QRService: Confirma registro\
+QRService --> Ctrl: Devuelve QR generado\
+Ctrl --> UI: Muestra QR con opciones\
+UI --> Est: Visualiza QR para compartir\
+@enduml\
+\
+Diagrama de Secuencia - Registro de Asistencia\
+@startuml\
+actor Organizador as Org\
+participant "App Esc\'e1ner" as Scanner\
+participant "API Validaci\'f3n" as API\
+participant "Servicio Asistencia" as Asistencia\
+participant "Notificaciones" as Notif\
+participant "Base de Datos" as DB\
+\
+Org -> Scanner: Escanea c\'f3digo QR\
+Scanner -> API: Env\'eda datos QR\
+API -> DB: Valida autenticidad QR\
+alt QR v\'e1lido\
+  DB --> API: Datos de inscripci\'f3n\
+  API -> Asistencia: Verifica asistencia previa\
+  Asistencia -> DB: Consulta registros\
+  alt Sin registro previo\
+    DB --> Asistencia: Confirma no registrado\
+    Asistencia -> DB: Registra asistencia\
+    DB --> Asistencia: Confirmaci\'f3n\
+    Asistencia -> Notif: Solicita notificaci\'f3n\
+    Notif --> Estudiante: Env\'eda confirmaci\'f3n\
+    Asistencia --> API: \'c9xito registro\
+    API --> Scanner: Muestra confirmaci\'f3n\
+    Scanner --> Org: Asistencia registrada\
+  else Ya registrado\
+    DB --> Asistencia: Asistencia existente\
+    Asistencia --> API: Error duplicado\
+    API --> Scanner: Muestra advertencia\
+    Scanner --> Org: "Asistencia ya registrada"\
+  end\
+else QR inv\'e1lido\
+  DB --> API: Error validaci\'f3n\
+  API --> Scanner: Muestra error\
+  Scanner --> Org: "QR no v\'e1lido"\
+end\
+@enduml\
+\
+Diagrama de Flujo - Registro de Asistencia con QR\
+@startuml\
+start\
+:Estudiante accede a "Mis actividades";\
+if (Est\'e1 autenticado y tiene actividades?) then (S\'ed)\
+  :Selecciona actividad;\
+  :Genera c\'f3digo QR \'fanico\\n(vinculado a inscripci\'f3n);\
+  :Muestra QR con opciones\\nde exportaci\'f3n/compartir;\
+else (No)\
+  :Muestra error "No inscrito";\
+  stop\
+endif\
+\
+:Organizador escanea QR;\
+:Validar autenticidad del QR;\
+if (QR es v\'e1lido?) then (S\'ed)\
+  :Verificar fecha/hora de la actividad;\
+  if (Est\'e1 en per\'edodo v\'e1lido?) then (S\'ed)\
+    :Consultar si asistencia ya fue registrada;\
+    if (Asistencia existe?) then (No)\
+      :Registrar asistencia en BD;\
+      :Notificar al estudiante;\
+      :Mostrar confirmaci\'f3n al organizador;\
+    else (S\'ed)\
+      :Mostrar "Asistencia ya registrada";\
+    endif\
+  else (No)\
+    :Mostrar "Fuera de per\'edodo v\'e1lido";\
+  endif\
+else (No)\
+  :Mostrar "QR inv\'e1lido o corrupto";\
+endif\
+stop\
+@enduml}
